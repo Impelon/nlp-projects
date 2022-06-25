@@ -2,13 +2,14 @@ import re
 import statistics
 
 import spam_parser
+import preprocessing
 
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 sns.set_theme(context="paper", style="white", font_scale=1.5, font="Times New Roman")
 
-WORD_PATTERN = re.compile("\w+")
+WORD_PATTERN = re.compile(r"\w+")
 
 
 def tokenize(text):
@@ -52,3 +53,21 @@ if __name__ == "__main__":
     print("Spam vocabulary length:", len(spam_vocab))
     print("Ham vocabulary length: ", len(ham_vocab))
     print("Vocabulary overlap: {:.3%}".format(vocabulary_overlap(spam_vocab, ham_vocab)))
+
+    urls_in_spam = list(map(lambda x: len(preprocessing.URL_PATTERN.findall(x)), spam))
+    urls_in_ham = list(map(lambda x: len(preprocessing.URL_PATTERN.findall(x)), ham))
+
+    print("Spam SMS' with URLs: {:.3%}".format(len(list(filter(None, urls_in_spam))) / len(spam)))
+    print("Ham SMS' with URLs: {:.3%}".format(len(list(filter(None, urls_in_ham))) / len(ham)))
+
+    phone_numbers_in_spam = list(map(lambda x: len(preprocessing.TELEPHONE_PATTERN.findall(x)), spam))
+    phone_numbers_in_ham = list(map(lambda x: len(preprocessing.TELEPHONE_PATTERN.findall(x)), ham))
+
+    print("Spam SMS' with phone numbers: {:.3%}".format(len(list(filter(None, phone_numbers_in_spam))) / len(spam)))
+    print("Ham SMS' with phone numbers: {:.3%}".format(len(list(filter(None, phone_numbers_in_ham))) / len(ham)))
+
+    pobox_in_spam = list(map(lambda x: len(preprocessing.POBOX_PATTERN.findall(x)), spam))
+    pobox_in_ham = list(map(lambda x: len(preprocessing.POBOX_PATTERN.findall(x)), ham))
+
+    print("Spam SMS' with PO-boxes: {:.3%}".format(len(list(filter(None, pobox_in_spam))) / len(spam)))
+    print("Ham SMS' with PO-boxes: {:.3%}".format(len(list(filter(None, pobox_in_ham))) / len(ham)))
