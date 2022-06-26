@@ -1,0 +1,175 @@
+# Without preprocessing (no stop-word removal)
+
+
+Results of bayes with count:
+              precision    recall  f1-score   support
+
+         ham    0.99346   0.97535   0.98432      4827
+        spam    0.85749   0.95850   0.90518       747
+
+    accuracy                        0.97309      5574
+   macro avg    0.92547   0.96692   0.94475      5574
+weighted avg    0.97524   0.97309   0.97371      5574
+
+Results of bayes with tf-idf:
+              precision    recall  f1-score   support
+
+         ham    0.97926   0.99751   0.98830      4827
+        spam    0.98174   0.86345   0.91880       747
+
+    accuracy                        0.97955      5574
+   macro avg    0.98050   0.93048   0.95355      5574
+weighted avg    0.97959   0.97955   0.97899      5574
+
+Results of ffn with count:
+              precision    recall  f1-score   support
+
+         ham    0.98548   0.99834   0.99187      4827
+        spam    0.98830   0.90495   0.94479       747
+
+    accuracy                        0.98583      5574
+   macro avg    0.98689   0.95165   0.96833      5574
+weighted avg    0.98586   0.98583   0.98556      5574
+
+Results of ffn with tf-idf:
+              precision    recall  f1-score   support
+
+         ham    0.98386   0.99751   0.99064      4827
+        spam    0.98235   0.89424   0.93623       747
+
+    accuracy                        0.98367      5574
+   macro avg    0.98311   0.94588   0.96343      5574
+weighted avg    0.98366   0.98367   0.98335      5574
+
+
+# Without preprocessing + stop-word removal
+
+
+Results of bayes with count:
+              precision    recall  f1-score   support
+
+         ham    0.99348   0.97866   0.98602      4827
+        spam    0.87424   0.95850   0.91443       747
+
+    accuracy                        0.97596      5574
+   macro avg    0.93386   0.96858   0.95022      5574
+weighted avg    0.97750   0.97596   0.97642      5574
+
+Results of bayes with tf-idf:
+              precision    recall  f1-score   support
+
+         ham    0.98267   0.99876   0.99065      4827
+        spam    0.99102   0.88621   0.93569       747
+
+    accuracy                        0.98367      5574
+   macro avg    0.98685   0.94248   0.96317      5574
+weighted avg    0.98379   0.98367   0.98328      5574
+
+Results of ffn with count:
+              precision    recall  f1-score   support
+
+         ham    0.98468   0.99896   0.99177      4827
+        spam    0.99261   0.89960   0.94382       747
+
+    accuracy                        0.98565      5574
+   macro avg    0.98865   0.94928   0.96780      5574
+weighted avg    0.98575   0.98565   0.98535      5574
+
+Results of ffn with tf-idf:
+              precision    recall  f1-score   support
+
+         ham    0.98145   0.99731   0.98931      4827
+        spam    0.98057   0.87818   0.92655       747
+
+    accuracy                        0.98134      5574
+   macro avg    0.98101   0.93774   0.95793      5574
+weighted avg    0.98133   0.98134   0.98090      5574
+
+
+# With preprocessing (no stop-word removal)
+
+
+Results of bayes with count:
+              precision    recall  f1-score   support
+
+         ham    0.99451   0.97493   0.98462      4827
+        spam    0.85629   0.96519   0.90749       747
+
+    accuracy                        0.97363      5574
+   macro avg    0.92540   0.97006   0.94606      5574
+weighted avg    0.97598   0.97363   0.97428      5574
+
+Results of bayes with tf-idf:
+              precision    recall  f1-score   support
+
+         ham    0.98184   0.99710   0.98941      4827
+        spam    0.97917   0.88086   0.92741       747
+
+    accuracy                        0.98152      5574
+   macro avg    0.98051   0.93898   0.95841      5574
+weighted avg    0.98149   0.98152   0.98110      5574
+
+Results of ffn with count:
+              precision    recall  f1-score   support
+
+         ham    0.98710   0.99896   0.99300      4827
+        spam    0.99274   0.91566   0.95265       747
+
+    accuracy                        0.98780      5574
+   macro avg    0.98992   0.95731   0.97282      5574
+weighted avg    0.98786   0.98780   0.98759      5574
+
+Results of ffn with tf-idf:
+              precision    recall  f1-score   support
+
+         ham    0.98589   0.99876   0.99228      4827
+        spam    0.99123   0.90763   0.94759       747
+
+    accuracy                        0.98654      5574
+   macro avg    0.98856   0.95319   0.96994      5574
+weighted avg    0.98661   0.98654   0.98629      5574
+
+
+# With preprocessing + stop-word removal
+
+
+Results of bayes with count:
+              precision    recall  f1-score   support
+
+         ham    0.99493   0.97618   0.98546      4827
+        spam    0.86277   0.96787   0.91230       747
+
+    accuracy                        0.97506      5574
+   macro avg    0.92885   0.97202   0.94888      5574
+weighted avg    0.97722   0.97506   0.97566      5574
+
+Results of bayes with tf-idf:
+              precision    recall  f1-score   support
+
+         ham    0.98627   0.99710   0.99166      4827
+        spam    0.97983   0.91031   0.94379       747
+
+    accuracy                        0.98547      5574
+   macro avg    0.98305   0.95370   0.96772      5574
+weighted avg    0.98541   0.98547   0.98524      5574
+
+Results of ffn with count:
+              precision    recall  f1-score   support
+
+         ham    0.98711   0.99917   0.99310      4827
+        spam    0.99419   0.91566   0.95331       747
+
+    accuracy                        0.98798      5574
+   macro avg    0.99065   0.95742   0.97321      5574
+weighted avg    0.98805   0.98798   0.98777      5574
+
+Results of ffn with tf-idf:
+              precision    recall  f1-score   support
+
+         ham    0.98345   0.99731   0.99033      4827
+        spam    0.98085   0.89157   0.93408       747
+
+    accuracy                        0.98314      5574
+   macro avg    0.98215   0.94444   0.96221      5574
+weighted avg    0.98310   0.98314   0.98279      5574
+
