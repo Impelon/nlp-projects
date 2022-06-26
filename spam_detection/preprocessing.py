@@ -60,3 +60,10 @@ def preprocess(text):
 
     return text
 
+
+# Same as the pattern used by sklearn.feature_extraction.text
+WORD_PATTERN = re.compile(r"\b\w\w+\b")
+
+
+def tokenize(text):
+    return WORD_PATTERN.findall(text)
