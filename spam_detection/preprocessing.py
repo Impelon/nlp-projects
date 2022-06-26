@@ -4,6 +4,7 @@ import re
 POBOX_PATTERN = re.compile(r"(po ?box\w*( \d+)?)|(box ?(?=\w*\d)\w+)", re.IGNORECASE)
 TELEPHONE_PATTERN = re.compile(r"(\+?[\d.*]{5,}\d)|(\b\d{5})")
 URL_PATTERN = re.compile(r"(?=\S*[a-zA-z]{2})(https?://)?([\w-]+\.){2,}[\w+-]+(/\S+)*/?")
+MONEY_PATTERN = re.compile(r"[£$]\d+([.,]\d+)?")
 
 # This list of stopwords was manually selected by us from inspecting the most common 200 tokens in the dataset
 # and removing semantically significant words from the list.
@@ -29,9 +30,33 @@ CHARACTERS_TO_REPLACE = {
     "Ü": "U",
 }
 
+# Unused.
+SLANG_TO_REPLACE = {
+    re.compile("\bu\b"): "you",
+    re.compile("'s"): "is",
+    re.compile("\b2\b"): "to",
+    re.compile("n't"): "not",
+    re.compile("'m"): "am",
+    re.compile("\b4\b"): "for",
+    re.compile("\br\b"): "are",
+    re.compile("\bn\b"): "and",
+    re.compile("'d"): "would",
+    re.compile("\bd\b"): "the",
+    re.compile("\bk\b"): "ok",
+    re.compile("\be\b"): "the",
+    re.compile("\bb\b"): "be",
+}
+
+
 def preprocess(text):
     text = html.unescape(text)
-    for to_be_replaced, replacement in CHARACTERS_TO_REPLACE:
+    for to_be_replaced, replacement in CHARACTERS_TO_REPLACE.items():
         text = text.replace(to_be_replaced, replacement)
-    # TODO use patterns from above
+
+    text = POBOX_PATTERN.sub(" POBox ", text)
+    text = TELEPHONE_PATTERN.sub(" phonenumber ", text)
+    text = URL_PATTERN.sub(" URL ", text)
+    text = MONEY_PATTERN.sub(" sumofmoney ", text)
+
     return text
+
