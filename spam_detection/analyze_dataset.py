@@ -9,15 +9,8 @@ import seaborn as sns
 
 sns.set_theme(context="paper", style="white", font_scale=1.5, font="Times New Roman")
 
-WORD_PATTERN = re.compile(r"\w+")
-
-
-def tokenize(text):
-    return WORD_PATTERN.findall(text)
-
-
 def build_vocabulary(sentences):
-    return set(word for sentence in sentences for word in tokenize(sentence.lower()))
+    return set(word for sentence in sentences for word in preprocessing.tokenize(sentence.lower()))
 
 
 def vocabulary_overlap(vocab_a, vocab_b):
@@ -37,8 +30,8 @@ if __name__ == "__main__":
     ax.set_xticklabels(["spam", "ham"])
     plt.show()
 
-    spam_lengths_by_word = list(map(lambda x: len(tokenize(x)), spam))
-    ham_lengths_by_word = list(map(lambda x: len(tokenize(x)), ham))
+    spam_lengths_by_word = list(map(lambda x: len(preprocessing.tokenize(x)), spam))
+    ham_lengths_by_word = list(map(lambda x: len(preprocessing.tokenize(x)), ham))
 
     print("Median words per Spam SMS: {:.3f} ±{:.3f}".format(statistics.median(spam_lengths_by_word), statistics.stdev(spam_lengths_by_word)))
     print("Median words per Ham SMS:  {:.3f} ±{:.3f}".format(statistics.median(ham_lengths_by_word), statistics.stdev(ham_lengths_by_word)))
@@ -71,3 +64,9 @@ if __name__ == "__main__":
 
     print("Spam SMS' with PO-boxes: {:.3%}".format(len(list(filter(None, pobox_in_spam))) / len(spam)))
     print("Ham SMS' with PO-boxes: {:.3%}".format(len(list(filter(None, pobox_in_ham))) / len(ham)))
+
+    money_in_spam = list(map(lambda x: len(preprocessing.MONEY_PATTERN.findall(x)), spam))
+    money_in_ham = list(map(lambda x: len(preprocessing.MONEY_PATTERN.findall(x)), ham))
+
+    print("Spam SMS' with money: {:.3%}".format(len(list(filter(None, money_in_spam))) / len(spam)))
+    print("Ham SMS' with money: {:.3%}".format(len(list(filter(None, money_in_ham))) / len(ham)))
