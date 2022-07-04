@@ -7,7 +7,7 @@ import preprocessing
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-sns.set_theme(context="paper", style="white", font_scale=1.5, font="Times New Roman")
+sns.set_theme(context="paper", style="white", font_scale=1.5, font="serif")
 
 def build_vocabulary(sentences):
     return set(word for sentence in sentences for word in preprocessing.tokenize(sentence.lower()))
@@ -28,6 +28,7 @@ if __name__ == "__main__":
 
     ax = sns.violinplot(data=[spam_lengths, ham_lengths])
     ax.set_xticklabels(["spam", "ham"])
+    plt.savefig("spam_ham_lengths.pdf", bbox_inches="tight", pad_inches=0)
     plt.show()
 
     spam_lengths_by_word = list(map(lambda x: len(preprocessing.tokenize(x)), spam))
@@ -38,14 +39,16 @@ if __name__ == "__main__":
 
     ax = sns.violinplot(data=[spam_lengths_by_word, ham_lengths_by_word])
     ax.set_xticklabels(["spam", "ham"])
+    plt.savefig("spam_ham_words.pdf", bbox_inches="tight", pad_inches=0)
     plt.show()
 
     spam_vocab = build_vocabulary(spam)
     ham_vocab = build_vocabulary(ham)
 
-    print("Spam vocabulary length:", len(spam_vocab))
-    print("Ham vocabulary length: ", len(ham_vocab))
-    print("Vocabulary overlap: {:.3%}".format(vocabulary_overlap(spam_vocab, ham_vocab)))
+    print("Spam vocabulary length:   ", len(spam_vocab))
+    print("Ham vocabulary length:    ", len(ham_vocab))
+    print("Overall vocabulary length:", len(spam_vocab.union(ham_vocab)))
+    print("Vocabulary overlap:        {:.3%}".format(vocabulary_overlap(spam_vocab, ham_vocab)))
 
     urls_in_spam = list(map(lambda x: len(preprocessing.URL_PATTERN.findall(x)), spam))
     urls_in_ham = list(map(lambda x: len(preprocessing.URL_PATTERN.findall(x)), ham))
