@@ -15,3 +15,5 @@
   - Contains our code to load a translation-dataset.
   - Optionally performs data sampling and shuffles the data.
   - Performs some preprocessing concerning the alignment of correspondences (e.g. merging empty translations).
+- `unittests.py`
+  - Includes unit tests for some of our functions.
