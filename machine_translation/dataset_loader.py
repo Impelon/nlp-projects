@@ -3,8 +3,11 @@ import warnings
 from pathlib import Path
 from collections import deque
 
-# Configure a seed so the data-sampling is reproducible.
-random.seed(42)
+try:
+    from tqdm import tqdm
+except ImportError:
+    def tqdm(x, *args, **kwargs):
+        return x
 
 DATA_PATH = Path(__file__).parent / "data"
 
@@ -56,11 +59,12 @@ def merge_empty_pairs(pairs):
         yield from previous
 
 
-def load_dataset(language, sampling_ratio=1, merge_empty=True, shuffle=True, data_path=None):
+def load_dataset(language, sampling_ratio=1, merge_empty=True, shuffle=True, data_path=None, seed=42):
+    random.seed(seed)  # Configure a seed so the data-sampling is reproducible.
     dataset = iterate_dataset(language, data_path=data_path)
     if merge_empty:
         dataset = merge_empty_pairs(dataset)
-    dataset = list(dataset)
+    dataset = list(tqdm(dataset, desc=f"Loading dataset for {language}"))
     sample_length = int(len(dataset) * sampling_ratio)
     if shuffle:
         return random.sample(dataset, k=sample_length)
