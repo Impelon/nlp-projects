@@ -88,7 +88,6 @@ def iterate_dataset(language, data_path=None):
                           sep + sep.join(map(str, paths)) + "\n" +
                           "Using first entry!")
 
-    with lang_paths[0].open("r") as lang_file:
-        with en_paths[0].open("r") as en_file:
-            for lang_line, en_line in zip(lang_file, en_file):
-                yield lang_line.strip(), en_line.strip()
+    with lang_paths[0].open("r") as lang_file, en_paths[0].open("r") as en_file:
+        for lang_line, en_line in zip(lang_file, en_file):
+            yield lang_line.strip(), en_line.strip()
