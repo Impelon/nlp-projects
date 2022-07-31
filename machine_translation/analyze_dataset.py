@@ -24,6 +24,52 @@ def count_characters(dataset, start=128):
     return Counter(char for entry in dataset for char in entry[0] + entry[1] if ord(char) >= start)
 
 
+def show_frequent_characters_by_language():
+    k = 15
+    nl_counts = Counter()
+    en_counts = Counter()
+    for nl_line, en_line in loader.iterate_dataset("nl"):
+        nl_counts.update(nl_line)
+        en_counts.update(en_line)
+
+    df = pd.DataFrame.from_records([(repr(char), value) for char, value in nl_counts.most_common(n=k)],
+                                   columns=["character", "frequency"])
+    ax = sns.barplot(data=df, x="character", y="frequency", color="darkorange")
+    ax.set_title(f"top-{k} most frequent characters in the Dutch version")
+    plt.savefig(IMAGES_PATH / "frequent_characters_nl.pdf", bbox_inches="tight", pad_inches=0)
+    plt.show()
+    df = pd.DataFrame.from_records([(repr(char), value) for char, value in en_counts.most_common(n=k)],
+                                   columns=["character", "frequency"])
+    ax = sns.barplot(data=df, x="character", y="frequency", color="cornflowerblue")
+    ax.set_title(f"top-{k} most frequent characters in the English version")
+    plt.savefig(IMAGES_PATH / "frequent_characters_en.pdf", bbox_inches="tight", pad_inches=0)
+    plt.show()
+
+
+def show_frequent_tokens_by_language():
+    k = 15
+    nl_counts = Counter()
+    en_counts = Counter()
+    for nl_line, en_line in loader.iterate_dataset("nl"):
+        nl_counts.update(nl_line.split())
+        en_counts.update(en_line.split())
+
+    df = pd.DataFrame.from_records([(token, value) for token, value in nl_counts.most_common(n=k)],
+                                   columns=["token", "frequency"])
+    ax = sns.barplot(data=df, x="token", y="frequency", color="darkorange")
+    ax.set_title(f"top-{k} most frequent token in the Dutch version")
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
+    plt.savefig(IMAGES_PATH / "frequent_token_nl.pdf", bbox_inches="tight", pad_inches=0)
+    plt.show()
+    df = pd.DataFrame.from_records([(token, value) for token, value in en_counts.most_common(n=k)],
+                                   columns=["token", "frequency"])
+    ax = sns.barplot(data=df, x="token", y="frequency", color="cornflowerblue")
+    ax.set_title(f"top-{k} most frequent token in the English version")
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
+    plt.savefig(IMAGES_PATH / "frequent_token_en.pdf", bbox_inches="tight", pad_inches=0)
+    plt.show()
+
+
 def show_pattern_by_language():
     k = 25
     years = {}
@@ -87,10 +133,10 @@ def explore_interactively():
     iglobals = {
         "languages": LANGUAGES,
         "p": lambda dataset: list(pre.preprocess_dataset(dataset)),
-        "l": lambda lang: loader.load_dataset(lang, shuffle=False),
+        "l": lambda lang: loader.load_dataset(lang, preprocess=False, shuffle=False),
         "lraw": lambda lang: list(loader.iterate_dataset(lang)),
         "la": lambda ratio=0.1: list(itertools.chain.from_iterable(
-            loader.load_dataset(lang, sampling_ratio=ratio, shuffle=False) for lang in LANGUAGES)),
+            loader.load_dataset(lang, preprocess=False, sampling_ratio=ratio, shuffle=False) for lang in LANGUAGES)),
         "anyf": lambda func, iterable:
             list(filter(lambda x: func(x[1][0]) or func(x[1][1]), enumerate(iterable))),
         "anyfr": lambda pattern, iterable:
