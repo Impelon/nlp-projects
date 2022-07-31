@@ -2,6 +2,7 @@ import random
 import warnings
 from pathlib import Path
 from collections import deque
+import preprocessing
 
 try:
     from tqdm import tqdm
@@ -59,7 +60,7 @@ def merge_empty_pairs(pairs):
         yield from previous
 
 
-def load_dataset(language, sampling_ratio=1, merge_empty=True, shuffle=True, data_path=None, seed=42):
+def load_dataset(language, sampling_ratio=1, merge_empty=True, preprocess=True, shuffle=True, data_path=None, seed=42):
     random.seed(seed)  # Configure a seed so the data-sampling is reproducible.
     dataset = iterate_dataset(language, data_path=data_path)
     if merge_empty:
@@ -67,8 +68,11 @@ def load_dataset(language, sampling_ratio=1, merge_empty=True, shuffle=True, dat
     dataset = list(tqdm(dataset, desc=f"Loading dataset for {language}"))
     sample_length = int(len(dataset) * sampling_ratio)
     if shuffle:
-        return random.sample(dataset, k=sample_length)
-    del dataset[sample_length:]
+        dataset = random.sample(dataset, k=sample_length)
+    else:
+        del dataset[sample_length:]
+    if preprocess:
+        dataset = list(preprocessing.preprocess_dataset(dataset))
     return dataset
 
 

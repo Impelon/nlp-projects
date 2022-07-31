@@ -96,6 +96,8 @@ FOREIGN2LATIN_TABLE.update(CYRILLIC2LATIN_TABLE)
 
 
 def calculate_foreign_symbol_rate(text):
+    if not text:
+        return 0
     decomposed = unicodedata.normalize("NFD", text)
     foreign_ordinals = filter(FOREIGN2LATIN_TABLE.__contains__, map(ord, decomposed))
     return len(tuple(foreign_ordinals)) / len(decomposed)
@@ -144,13 +146,15 @@ def preprocess_correspondence(pair, replace_characters=None, transliterate_forei
 def preprocess_dataset(dataset, replace_characters=None, transliterate_foreign=None, max_foreign_ratio=0.15):
     if transliterate_foreign is None:
         transliterate_foreign = True
-    for pair in tqdm(dataset, "Proprocessing dataset"):
+    for pair in tqdm(dataset, "Preprocessing dataset"):
         foreign_ratios = None
         if transliterate_foreign:
             foreign_ratios = (calculate_foreign_symbol_rate(pair[0]), calculate_foreign_symbol_rate(pair[1]))
             if sum(foreign_ratios) > max_foreign_ratio and not all(foreign_ratios):
-                # Skip correspondences where foreign symbols are only included in one language and represent a major part of the sentence:
-                # That indicates we are dealing with a sentence written in a foreign language, which should not be part of the dataset.
+                # Skip correspondences where foreign symbols are only included one language
+                # and represent a major part of the sentence:
+                # That indicates we are dealing with a sentence written in a foreign language,
+                # which should not be part of the dataset.
                 continue
 
         # Do regular preprocessing.
