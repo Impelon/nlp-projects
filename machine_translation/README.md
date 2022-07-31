@@ -6,11 +6,15 @@
   - Contains our code to extract insights from the dataset.
 - `translation.py`
   - Contains our code to create models for translation between languages.
-  - Creates complete pipelines, including tokenizer, embedding, encoder and decoder.
+  - Creates complete pipelines, including tokenizer, embeddings, encoder and decoder.
+  - Can create pipelines using English as a pivot-language.
+  - Provides methods for training pipelines.
 - `experiments.py`
   - Contains all our experiments using different models, approaches and languages.
 - `preprocessing.py`
   - Contains our code to preprocess pairs of correspondences.
+- `tokenizers.py`
+  - Contains some extensions around Keras' tokenizers so we can employ them more easily.
 - `dataset_loader.py`
   - Contains our code to load a translation-dataset.
   - Optionally performs data sampling and shuffles the data.
