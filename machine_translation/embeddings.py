@@ -160,10 +160,12 @@ class Word2VecEmbeddings(KeyedVectorsEmbeddings):
         token_frequencies = self.count_token_frequencies(tokenizer.get_vocabulary(), tokenized_corpus)
         trainer.build_vocab_from_freq(token_frequencies, corpus_count=len(corpus), update=False)
         # Train and save the embeddings.
+        opts = {k: v for k, v in self.trainer_options.items() if k in ["compute_loss", "callbacks"]}
+        # Apparently gensim does not remember the above two options if not trained during initialization.
         for epoch in range(trainer.epochs):
             tokenized_corpus = tqdm(self.chunked_id_to_token(tokenizer, id_corpus),
                                     desc=f"Epoch #{epoch} (loss {trainer.get_latest_training_loss()})", total=len(corpus))
-            trainer.train(tokenized_corpus, total_examples=trainer.corpus_count, epochs=1)
+            trainer.train(tokenized_corpus, total_examples=trainer.corpus_count, epochs=1, **opts)
         wv = trainer.wv
         del trainer
         wv.save(str(self.path))

@@ -175,10 +175,11 @@ def translation_layers(from_language, to_language, pivot_language=None, tokenize
                               [to_language, model_options.get("decoder_options", {})]):
         type = options.pop("embeddings_type", None)
         size = options["embeddings_size"]
+        path = EMBEDDINGS_PATH / f"{type}_{size}_{language}"
         if type == "word2vec_cbow":
-            embeddings = Word2VecEmbeddings(f"{type}_{size}_{language}", size, sg=0)
+            embeddings = Word2VecEmbeddings(path, size, sg=0)
         elif type == "word2vec_skip":
-            embeddings = Word2VecEmbeddings(f"{type}_{size}_{language}", size, sg=1)
+            embeddings = Word2VecEmbeddings(path, size, sg=1)
         elif type is None:
             continue
         else:
@@ -187,7 +188,7 @@ def translation_layers(from_language, to_language, pivot_language=None, tokenize
             if not dataset:
                 dataset = dataset_loader.load_dataset(non_english, merge_empty=False, shuffle=True)
             language_index = 1 if language == "en" else 0
-            corpus = map(lambda x: x[language_index], dataset)
+            corpus = list(map(lambda x: x[language_index], dataset))
             embeddings.try_train(tokenizers[language], corpus)
         options["embeddings_initializer"] = embeddings.keras_embeddings_initializer()
 
