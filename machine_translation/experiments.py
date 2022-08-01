@@ -1,6 +1,7 @@
 import json
-import statistics
 import time
+import statistics
+import random
 from pathlib import Path
 from functools import lru_cache
 
@@ -106,7 +107,7 @@ def evaluate_pipeline(model, texts_to_translate, target_translations, **generati
     return results
 
 
-def evaluate_translations(references, hypotheses, language="en"):
+def evaluate_translations(references, hypotheses, language="en", include_samples=10):
     # Convert tensors of byte-sequences to text if needed.
     if isinstance(references, tf.Tensor):
         references = map(bytes.decode, references.numpy())
@@ -119,6 +120,10 @@ def evaluate_translations(references, hypotheses, language="en"):
 
     references = [word_tokenize(reference) for reference in references]
     hypotheses = [word_tokenize(hypothesis) for hypothesis in hypotheses]
+
+    if include_samples > 0:
+        sample_indices = random.sample(range(len(references)), include_samples)
+        results["samples"] = [(" ".join(references[i]), " ".join(hypotheses[i])) for i in sample_indices]
 
     scores = []
     for reference, hypothesis in tqdm(zip(references, hypotheses), desc="Calculating METEOR"):
@@ -193,7 +198,17 @@ def experiment_embeddings():
 
 
 def experiment_tokenizer():
-    pass
+    results = {}
+    _, _, test_from_texts, test_to_texts = get_correspondences("nl", "en", training_split=0.8, sampling_ratio=0.01)
+    genopts = {"num_beams": 2, "max_length": 10}
+    model = get_custom_trained_pipeline("nl", "en", "exp_base", 0.01, **t.PIPELINE_PRESETS["base"])
+    results["word_level"] = evaluate_pipeline(model, test_from_texts, test_to_texts, **genopts)
+    # English words are 5 characters long on average;
+    # as such we need to drastically increase the maximum length for a character-based model.
+    genopts = {"num_beams": 2, "max_length": 50}
+    model = get_custom_trained_pipeline("nl", "en", "exp_byte_base", 0.01, **t.PIPELINE_PRESETS["byte_base"])
+    results["character_level"] = evaluate_pipeline(model, test_from_texts, test_to_texts, **genopts)
+    save_results("experiment_tokenizer", results)
 
 
 def experiment_state_size():
@@ -201,7 +216,32 @@ def experiment_state_size():
 
 
 def experiment_attention():
-    pass
+    results = {}
+    _, _, test_from_texts, test_to_texts = get_correspondences("nl", "en", training_split=0.8, sampling_ratio=0.01)
+    genopts = {"num_beams": 2, "max_length": 16}
+    model = get_custom_trained_pipeline("nl", "en", "exp_base", 0.01, **t.PIPELINE_PRESETS["base"])
+    results["no_attention"] = evaluate_pipeline(model, test_from_texts, test_to_texts, **genopts)
+    model = get_custom_trained_pipeline("nl", "en", "exp_base_attn", 0.01, **t.PIPELINE_PRESETS["base_attn"])
+    results["with_attention"] = evaluate_pipeline(model, test_from_texts, test_to_texts, **genopts)
+    save_results("experiment_attention", results)
+
+
+def experiment_both_directions():
+    # Reduce amount of test data by setting a higher training-split.
+    # We need to massively reduce the amount of test data,
+    # as generating the translation for a single example takes over a second.
+    results = {}
+    _, _, test_from_texts, test_to_texts = get_correspondences("nl", "en", training_split=0.98,
+                                                               sampling_ratio=DEFAULT_SAMPLING_RATIO)
+    genopts = {"num_beams": 2, "max_length": 32}
+    model = get_trained_pipeline("nl", "en", "base_attn")
+    results["nl_to_en"] = evaluate_pipeline(model, test_from_texts, test_to_texts, **genopts)
+    _, _, test_from_texts, test_to_texts = get_correspondences("en", "nl", training_split=0.98,
+                                                               sampling_ratio=DEFAULT_SAMPLING_RATIO)
+    genopts = {"num_beams": 2, "max_length": 32}
+    model = get_trained_pipeline("en", "nl", "base_attn")
+    results["en_to_nl"] = evaluate_pipeline(model, test_from_texts, test_to_texts, **genopts)
+    save_results("experiment_both_directions", results)
 
 
 def experiment_pivot():
