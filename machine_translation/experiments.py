@@ -13,6 +13,7 @@ from nltk.translate.meteor_score import single_meteor_score
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
 from nltk.stem import SnowballStemmer
 
+import matplotlib
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
@@ -144,13 +145,19 @@ def evaluate_translations(references, hypotheses, language="en", include_samples
 
 def statistics_for_collection(values):
     metrics = {}
-    metrics["mean"] = statistics.mean(values)
-    quartiles = statistics.quantiles(values, n=4, method="inclusive")
-    metrics["lower_quartile"], metrics["median"], metrics["higher_quartile"] = quartiles
-    iqr = quartiles[2] - quartiles[0]
-    bound_multiplier = 1.5
-    metrics["lower_bound"] = min(filter(lambda x: x >= quartiles[0] - bound_multiplier * iqr, values))
-    metrics["higher_bound"] = max(filter(lambda x: x <= quartiles[2] + bound_multiplier * iqr, values))
+    metrics = matplotlib.cbook.boxplot_stats(values)[0]
+    stat_names = {"mean": "mean", "med": "median",
+                  "q1": "lower_quartile", "q3": "higher_quartile",
+                  "whislo": "lower_bound", "whishi": "higher_bound"}
+    metrics = {stat_names[key]: value for key, value in metrics.items() if key in stat_names}
+    # This works the same as above, but is Python 3.8+ only:
+    #metrics["mean"] = statistics.mean(values)
+    #quartiles = statistics.quantiles(values, n=4, method="inclusive")
+    #metrics["lower_quartile"], metrics["median"], metrics["higher_quartile"] = quartiles
+    #iqr = quartiles[2] - quartiles[0]
+    #bound_multiplier = 1.5
+    #metrics["lower_bound"] = min(filter(lambda x: x >= quartiles[0] - bound_multiplier * iqr, values))
+    #metrics["higher_bound"] = max(filter(lambda x: x <= quartiles[2] + bound_multiplier * iqr, values))
     metrics["amount_low_outliers"] = sum(map(lambda x: int(x < metrics["lower_bound"]), values))
     metrics["amount_high_outliers"] = sum(map(lambda x: int(x > metrics["higher_bound"]), values))
     metrics["min"] = min(values)
