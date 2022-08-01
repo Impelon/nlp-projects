@@ -13,6 +13,8 @@
   - Provides methods for training pipelines.
 - `experiments.py`
   - Contains all our experiments using different models, approaches and languages.
+  - Includes code for evaluation using BLEU and METEOR.
+  - Automatically saves/loads/trains models and stores evaluation results.
 - `preprocessing.py`
   - Contains our code to preprocess pairs of correspondences.
 - `tokenizers.py`

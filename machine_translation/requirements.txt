@@ -3,6 +3,7 @@ keras
 keras-nlp==0.3.0
 sentencepiece
 tensorflow
+nltk
 matplotlib
 seaborn
 pandas
