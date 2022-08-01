@@ -132,6 +132,7 @@ def translation_pipeline(from_language, to_language, pivot_language=None, tokeni
                                 tokenizer_init=tokenizer_init, optimizer=optimizer, **model_options)
     from_tokenizer, to_tokenizer, core = layers
     model = TranslationPipeline(from_tokenizer, to_tokenizer, core, generation_options)
+    model.remember_languages(from_language, to_language)
     if not optimizer:
         optimizer = "adam"
     model.compile(optimizer=optimizer, loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True))
@@ -273,6 +274,8 @@ class TranslationPipeline(keras.Model):
 
     def __init__(self, from_tokenizer, to_tokenizer, core, default_generation_options=None, **kwargs):
         super().__init__(**kwargs)
+        self._from_language = None
+        self._to_language = None
         self.from_tokenizer = from_tokenizer
         self.to_tokenizer = to_tokenizer
         self.core = core
@@ -287,11 +290,31 @@ class TranslationPipeline(keras.Model):
         if default_generation_options:
             self.default_generation_options.update(default_generation_options)
 
+    @property
+    def from_language(self):
+        return self._from_language
+
+    @property
+    def to_language(self):
+        return self._to_language
+
+    def remember_languages(self, from_language, to_language):
+        """
+        Instruct the pipeline to remember its languages so they can be accessed externally, if needed.
+        (It itsself does not actually need to know which languages are involved.)
+        """
+        self._from_language = from_language
+        self._to_language = to_language
+
     def get_config(self):
         config = super().get_config()
         config.update({
             "default_generation_options": self.default_generation_options,
         })
+        if self.from_language:
+            config["from_language"] = self.from_language
+        if self.to_language:
+            config["to_language"] = self.to_language
         return config
 
     def translate(self, input_text, **generation_options):
