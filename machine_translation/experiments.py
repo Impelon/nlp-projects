@@ -61,8 +61,12 @@ def get_correspondences(from_language, to_language, training_split=0.8, **loader
         non_english = to_language
 
     dataset = get_dataset(non_english, **loader_options)
-    from_texts = tf.convert_to_tensor(list(map(lambda x: x[1], dataset)))
-    to_texts = tf.convert_to_tensor(list(map(lambda x: x[0], dataset)))
+
+    from_index, to_index = 0, 1
+    if from_language == "en":
+        from_index, to_index = 1, 0
+    from_texts = tf.convert_to_tensor(list(map(lambda x: x[from_index], dataset)))
+    to_texts = tf.convert_to_tensor(list(map(lambda x: x[to_index], dataset)))
 
     split_index = int(len(from_texts) * training_split)
     train_from_texts, test_from_texts = from_texts[:split_index], from_texts[split_index:]
@@ -70,9 +74,11 @@ def get_correspondences(from_language, to_language, training_split=0.8, **loader
     return train_from_texts, train_to_texts, test_from_texts, test_to_texts
 
 
-def get_trained_pipeline(from_language, to_language, pipeline_preset_name, sampling_ratio=DEFAULT_SAMPLING_RATIO, epochs=1):
+def get_trained_pipeline(from_language, to_language, pipeline_preset_name,
+                         sampling_ratio=DEFAULT_SAMPLING_RATIO, epochs=1):
     model_options = t.PIPELINE_PRESETS[pipeline_preset_name]
-    return get_custom_trained_pipeline(from_language, to_language, pipeline_preset_name, sampling_ratio, epochs=epochs, **model_options)
+    return get_custom_trained_pipeline(from_language, to_language, pipeline_preset_name, sampling_ratio,
+                                       epochs=epochs, **model_options)
 
 
 def get_custom_trained_pipeline(from_language, to_language, name, sampling_ratio, epochs=1, **model_options):
@@ -156,10 +162,9 @@ def save_results(name, results):
 # Experiments
 
 
-
 def experiment_embeddings():
     results = {}
-    _, _, test_from_texts, test_to_texts = get_correspondences("en", "nl", training_split=0.8, sampling_ratio=0.01)
+    _, _, test_from_texts, test_to_texts = get_correspondences("nl", "en", training_split=0.8, sampling_ratio=0.01)
     genopts = {"num_beams": 2, "max_length": 16}
     model_configuration = t.PIPELINE_PRESETS["small"]
 
@@ -185,6 +190,7 @@ def experiment_embeddings():
     model = get_custom_trained_pipeline("nl", "en", "exp_emb_learned_3x", 0.01, epochs=3, **model_configuration)
     results["learned"] = evaluate_pipeline(model, test_from_texts, test_to_texts, **genopts)
     save_results("experiment_embeddings", results)
+
 
 def experiment_tokenizer():
     pass

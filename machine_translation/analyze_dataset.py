@@ -83,8 +83,8 @@ def show_pattern_by_language():
         for lang_line, en_line in loader.iterate_dataset(lang):
             years[lang].update(CONTEMPORARY_YEAR_PATTERN.findall(lang_line))
             # years[f"EN ({lang})"].update(CONTEMPORARY_YEAR_PATTERN.findall(en_line))
-            language_codes[lang].update(pre.LANGUAGE_CODE_PATTERN.findall(lang_line))
-            language_codes[f"EN ({lang})"].update(pre.LANGUAGE_CODE_PATTERN.findall(en_line))
+            language_codes[lang].update(pre.PATTERNS_TO_REPLACE["language_code"].findall(lang_line))
+            language_codes[f"EN ({lang})"].update(pre.PATTERNS_TO_REPLACE["language_code"].findall(en_line))
     year_dfs = []
     language_code_dfs = []
     for lang, year_counter in years.items():

@@ -111,7 +111,7 @@ class EmbeddingsExtension(abc.ABC):
             frequencies.update(tokens)
         return frequencies
 
-    def train(self, vocabulary, corpus):
+    def _train(self, vocabulary, corpus):
         return False
 
 
