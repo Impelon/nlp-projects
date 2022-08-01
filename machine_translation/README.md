@@ -7,7 +7,9 @@
 - `translation.py`
   - Contains our code to create models for translation between languages.
   - Creates complete pipelines, including tokenizer, embeddings, encoder and decoder.
-  - Can create pipelines using English as a pivot-language.
+    - Functions building the models are near the end of the file.
+    - Available presets for model configurations are available near the top of the file.
+    - Can create pipelines using English as a pivot-language.
   - Provides methods for training pipelines.
 - `experiments.py`
   - Contains all our experiments using different models, approaches and languages.
