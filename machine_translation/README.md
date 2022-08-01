@@ -17,6 +17,8 @@
   - Contains our code to preprocess pairs of correspondences.
 - `tokenizers.py`
   - Contains some extensions around Keras' tokenizers so we can employ them more easily.
+- `embeddings.py`
+  - Contains some extensions around Gensim's vectorization models so we can employ them more easily.
 - `dataset_loader.py`
   - Contains our code to load a translation-dataset.
   - Optionally performs data sampling and shuffles the data.

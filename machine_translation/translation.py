@@ -1,8 +1,10 @@
+import os
 import string
 from pathlib import Path
 
 import dataset_loader
 from tokenizers import *
+from embeddings import *
 
 import keras
 import keras_nlp
@@ -14,6 +16,12 @@ except ImportError:
     def tqdm(x, *args, **kwargs):
         return x
 
+# See https://radimrehurek.com/gensim/models/word2vec.html#gensim.models.word2vec.Word2Vec for available options.
+Word2VecEmbeddings.default_trainer_options.update({
+    "hs": 1, # enable historical softmax
+    "workers": len(os.sched_getaffinity(0)),
+})
+
 # See https://github.com/google/sentencepiece/blob/master/doc/options.md for available options.
 SentencePieceTokenizer.default_trainer_options.update({
     "vocab_size": 16000,
@@ -23,6 +31,7 @@ SentencePieceTokenizer.default_trainer_options.update({
 PIPELINES_PATH = Path(__file__).parent / "pipelines"
 TOKENIZERS_PATH = PIPELINES_PATH / "tokenizers"
 MODELS_PATH = PIPELINES_PATH / "models"
+EMBEDDINGS_PATH = PIPELINES_PATH / "embeddings"
 
 TOKENIZER_INITS = {
     "subword": lambda lang:
@@ -35,30 +44,40 @@ PIPELINE_PRESETS = {
         "tokenizer_init": TOKENIZER_INITS["subword"],
         "intermediate_state_size": 32,
         "encoder_options": {
-            "embedding_size": 32,
+            "embeddings_size": 32,
         },
         "decoder_options": {
-            "embedding_size": 32,
+            "embeddings_size": 32,
+        },
+    },
+    "small": {
+        "tokenizer_init": TOKENIZER_INITS["subword"],
+        "intermediate_state_size": 32,
+        "encoder_options": {
+            "embeddings_size": 256,
+        },
+        "decoder_options": {
+            "embeddings_size": 256,
         },
     },
     "base": {
         "tokenizer_init": TOKENIZER_INITS["subword"],
-        "intermediate_state_size": 256,
+        "intermediate_state_size": 128,
         "encoder_options": {
-            "embedding_size": 256,
+            "embeddings_size": 256,
         },
         "decoder_options": {
-            "embedding_size": 256,
+            "embeddings_size": 256,
         },
     },
     "base_attn": {
         "tokenizer_init": TOKENIZER_INITS["subword"],
-        "intermediate_state_size": 256,
+        "intermediate_state_size": 128,
         "encoder_options": {
-            "embedding_size": 256,
+            "embeddings_size": 256,
         },
         "decoder_options": {
-            "embedding_size": 256,
+            "embeddings_size": 256,
             "use_attention": True,
         },
     },
@@ -66,31 +85,20 @@ PIPELINE_PRESETS = {
         "tokenizer_init": TOKENIZER_INITS["character"],
         "intermediate_state_size": 32,
         "encoder_options": {
-            "embedding_size": 32,
+            "embeddings_size": 32,
         },
         "decoder_options": {
-            "embedding_size": 8,
-        },
-    },
-    "byte_tiny_attn": {
-        "tokenizer_init": TOKENIZER_INITS["character"],
-        "intermediate_state_size": 32,
-        "encoder_options": {
-            "embedding_size": 32,
-        },
-        "decoder_options": {
-            "embedding_size": 8,
-            "use_attention": True,
+            "embeddings_size": 32,
         },
     },
     "byte_base": {
         "tokenizer_init": TOKENIZER_INITS["character"],
-        "intermediate_state_size": 256,
+        "intermediate_state_size": 128,
         "encoder_options": {
-            "embedding_size": 32,
+            "embeddings_size": 32,
         },
         "decoder_options": {
-            "embedding_size": 32,
+            "embeddings_size": 32,
         },
     },
 }
@@ -145,6 +153,7 @@ def translation_layers(from_language, to_language, pivot_language=None, tokenize
     if non_english == "en":
         non_english = to_language
 
+    # Load tokenizers.
     if not tokenizer_init:
         tokenizer_init = TOKENIZER_INITS["subword"]
     tokenizers = {}
@@ -159,6 +168,27 @@ def translation_layers(from_language, to_language, pivot_language=None, tokenize
         language_index = 1 if language == "en" else 0
         corpus = map(lambda x: x[language_index], dataset)
         tokenizer.try_train(corpus)
+
+    # Load pre-trained embeddings, if any.
+    for language, options in ([from_language, model_options.get("encoder_options", {})],
+                              [to_language, model_options.get("decoder_options", {})]):
+        type = options.pop("embeddings_type", None)
+        size = options["embeddings_size"]
+        if type == "word2vec_cbow":
+            embeddings = Word2VecEmbeddings(f"{type}_{size}_{language}", size, sg=0)
+        elif type == "word2vec_skip":
+            embeddings = Word2VecEmbeddings(f"{type}_{size}_{language}", size, sg=1)
+        elif type is None:
+            continue
+        else:
+            raise NotImplementedError("Unknown embedding type: " + repr(type))
+        if not embeddings.is_loaded:
+            if not dataset:
+                dataset = dataset_loader.load_dataset(non_english, merge_empty=False, shuffle=True)
+            language_index = 1 if language == "en" else 0
+            corpus = map(lambda x: x[language_index], dataset)
+            embeddings.try_train(tokenizers[language], corpus)
+        options["embeddings_initializer"] = embeddings.keras_embeddings_initializer()
 
     core = build_model(tokenizers[from_language].vocabulary_size(), tokenizers[to_language].vocabulary_size(),
                        **model_options)
@@ -224,7 +254,7 @@ def train_pipeline(model, from_texts, to_texts, epochs=1):
     train_labels = model.to_tokenizer(to_texts)[:, 1:]
     for epoch in tqdm(range(epochs), desc="Training epoch"):
         for i in tqdm(range(train_labels.get_shape()[0])):
-            model.fit([from_texts[i:i+1], to_texts[i:i+1]], train_labels[i:i+1], verbose=0)
+            model.fit([from_texts[i:i+1], to_texts[i:i+1]], train_labels[i:i+1].to_tensor(), verbose=0)
 
 
 class PivotTranslationPipeline:
@@ -325,8 +355,8 @@ def build_model(from_vocab_size, to_vocab_size, intermediate_state_size, encoder
     return keras.Model(inputs=[from_tokens, to_tokens], outputs=decoder_output, name="core")
 
 
-def build_embedding_layer(vocab_size, embedding_size, embeddings_initializer=None, embeddings_trainable=True):
-    return keras.layers.Embedding(vocab_size, embedding_size,
+def build_embedding_layer(vocab_size, embeddings_size, embeddings_initializer=None, embeddings_trainable=True):
+    return keras.layers.Embedding(vocab_size, embeddings_size,
                                   embeddings_initializer=embeddings_initializer, trainable=embeddings_trainable)
 
 
