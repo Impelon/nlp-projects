@@ -65,9 +65,13 @@ PIPELINE_PRESETS = {
         "intermediate_state_size": 128,
         "encoder_options": {
             "embeddings_size": 256,
+            "embeddings_type": "word2vec_cbow",
+            "embeddings_trainable": False,
         },
         "decoder_options": {
             "embeddings_size": 256,
+            "embeddings_type": "word2vec_cbow",
+            "embeddings_trainable": False,
         },
     },
     "base_attn": {
@@ -75,9 +79,13 @@ PIPELINE_PRESETS = {
         "intermediate_state_size": 128,
         "encoder_options": {
             "embeddings_size": 256,
+            "embeddings_type": "word2vec_cbow",
+            "embeddings_trainable": False,
         },
         "decoder_options": {
             "embeddings_size": 256,
+            "embeddings_type": "word2vec_cbow",
+            "embeddings_trainable": False,
             "use_attention": True,
         },
     },
