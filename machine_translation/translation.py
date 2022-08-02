@@ -326,7 +326,7 @@ class TranslationPipeline(keras.Model):
             config["to_language"] = self.to_language
         return config
 
-    def translate(self, input_text, **generation_options):
+    def translate(self, input_text, return_attention=False, **generation_options):
         input_tokens = self.from_tokenizer([input_text])
         intermediate_states, initial_state = self.encoder(input_tokens)
 
@@ -336,14 +336,24 @@ class TranslationPipeline(keras.Model):
         # Instead, we compute the outputs of the encoder once,
         # and provide them to the decoder in each beam-search iteration.
 
-        def token_logits(tokens):
-            logits = self.get_logits(self.decoder([tokens, intermediate_states, initial_state]))
-            return logits[:, -1, :]
+        if return_attention:
+            attentions = []
+            def token_logits(tokens):
+                logits, attention_weights = self.decoder([tokens, intermediate_states, initial_state])
+                attentions.append(attention_weights)
+                return logits.to_tensor()[:, -1, :]
+        else:
+            def token_logits(tokens):
+                logits = self.get_logits(self.decoder([tokens, intermediate_states, initial_state]))
+                return logits[:, -1, :]
 
         gen_kwargs = self.default_generation_options.copy()
         gen_kwargs.update(generation_options)
         output_tokens = keras_nlp.utils.beam_search(token_logits, **gen_kwargs)
         output_text = self.to_tokenizer(output_tokens, mode="detokenize")
+        if return_attention:
+            attention_stack = tf.concat(attentions, axis=1)
+            return output_text.numpy().decode(), attention_stack
         return output_text.numpy().decode()
 
     @tf.function
