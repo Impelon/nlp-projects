@@ -176,7 +176,13 @@ def save_results(name, results):
 
 def experiment_embeddings():
     results = {}
-    _, _, test_from_texts, test_to_texts = get_correspondences("nl", "en", training_split=0.8, sampling_ratio=0.01)
+    # Reduce amount of test data by setting a higher training-split.
+    # This only gets some fresh test data, the models are trained with the appropriate
+    # training data which is fetched in the "get*_trained_pipeline" functions.
+    # (This "hack" is used throughout the experiments.)
+    # We need to massively reduce the amount of test data,
+    # as generating the translation for a single example takes over a second.
+    _, _, test_from_texts, test_to_texts = get_correspondences("nl", "en", training_split=0.995, sampling_ratio=0.1)
     genopts = {"num_beams": 2, "max_length": 16}
     model_configuration = t.PIPELINE_PRESETS["small"]
 
@@ -184,36 +190,36 @@ def experiment_embeddings():
     model_configuration["encoder_options"]["embeddings_trainable"] = False
     model_configuration["decoder_options"]["embeddings_type"] = "word2vec_cbow"
     model_configuration["decoder_options"]["embeddings_trainable"] = False
-    model = get_custom_trained_pipeline("nl", "en", "exp_emb_word2vec_cbow", 0.01, **model_configuration)
+    model = get_custom_trained_pipeline("nl", "en", "exp_emb_word2vec_cbow", 0.1, **model_configuration)
     results["word2vec_cbow"] = evaluate_pipeline(model, test_from_texts, test_to_texts, **genopts)
+    save_results("experiment_embeddings", results) # save partial results
     model_configuration["encoder_options"]["embeddings_type"] = "word2vec_skip"
     model_configuration["encoder_options"]["embeddings_trainable"] = False
     model_configuration["decoder_options"]["embeddings_type"] = "word2vec_skip"
     model_configuration["decoder_options"]["embeddings_trainable"] = False
-    model = get_custom_trained_pipeline("nl", "en", "exp_emb_word2vec_skip", 0.01, **model_configuration)
+    model = get_custom_trained_pipeline("nl", "en", "exp_emb_word2vec_skip", 0.1, **model_configuration)
     results["word2vec_skip"] = evaluate_pipeline(model, test_from_texts, test_to_texts, **genopts)
+    save_results("experiment_embeddings", results)
     model_configuration["encoder_options"]["embeddings_type"] = None
     model_configuration["encoder_options"]["embeddings_trainable"] = True
     model_configuration["decoder_options"]["embeddings_type"] = None
     model_configuration["decoder_options"]["embeddings_trainable"] = True
-    model = get_custom_trained_pipeline("nl", "en", "exp_emb_learned", 0.01, **model_configuration)
-    results["learned"] = evaluate_pipeline(model, test_from_texts, test_to_texts, **genopts)
-    # Train for a few more epochs...
-    model = get_custom_trained_pipeline("nl", "en", "exp_emb_learned_3x", 0.01, epochs=3, **model_configuration)
+    model = get_custom_trained_pipeline("nl", "en", "exp_emb_learned", 0.1, **model_configuration)
     results["learned"] = evaluate_pipeline(model, test_from_texts, test_to_texts, **genopts)
     save_results("experiment_embeddings", results)
 
 
 def experiment_tokenizer():
     results = {}
-    _, _, test_from_texts, test_to_texts = get_correspondences("nl", "en", training_split=0.8, sampling_ratio=0.01)
+    _, _, test_from_texts, test_to_texts = get_correspondences("nl", "en", training_split=0.995, sampling_ratio=0.1)
     genopts = {"num_beams": 2, "max_length": 10}
-    model = get_custom_trained_pipeline("nl", "en", "exp_base", 0.01, **t.PIPELINE_PRESETS["base"])
+    model = get_trained_pipeline("nl", "en", "base")
     results["word_level"] = evaluate_pipeline(model, test_from_texts, test_to_texts, **genopts)
+    save_results("experiment_tokenizer", results)
     # English words are 5 characters long on average;
     # as such we need to drastically increase the maximum length for a character-based model.
     genopts = {"num_beams": 2, "max_length": 50}
-    model = get_custom_trained_pipeline("nl", "en", "exp_byte_base", 0.01, **t.PIPELINE_PRESETS["byte_base"])
+    model = get_trained_pipeline("nl", "en", "byte_base")
     results["character_level"] = evaluate_pipeline(model, test_from_texts, test_to_texts, **genopts)
     save_results("experiment_tokenizer", results)
 
@@ -224,26 +230,26 @@ def experiment_state_size():
 
 def experiment_attention():
     results = {}
-    _, _, test_from_texts, test_to_texts = get_correspondences("nl", "en", training_split=0.8, sampling_ratio=0.01)
+    _, _, test_from_texts, test_to_texts = get_correspondences("nl", "en", training_split=0.995, sampling_ratio=0.1)
     genopts = {"num_beams": 2, "max_length": 16}
-    model = get_custom_trained_pipeline("nl", "en", "exp_base", 0.01, **t.PIPELINE_PRESETS["base"])
+    model = get_trained_pipeline("nl", "en", "base")
     results["no_attention"] = evaluate_pipeline(model, test_from_texts, test_to_texts, **genopts)
-    model = get_custom_trained_pipeline("nl", "en", "exp_base_attn", 0.01, **t.PIPELINE_PRESETS["base_attn"])
+    save_results("experiment_attention", results)
+    model = get_trained_pipeline("nl", "en", "base_attn")
     results["with_attention"] = evaluate_pipeline(model, test_from_texts, test_to_texts, **genopts)
     save_results("experiment_attention", results)
 
 
 def experiment_both_directions():
-    # Reduce amount of test data by setting a higher training-split.
-    # We need to massively reduce the amount of test data,
-    # as generating the translation for a single example takes over a second.
     results = {}
-    _, _, test_from_texts, test_to_texts = get_correspondences("nl", "en", training_split=0.98,
+    # Use some more test-data for the final experiments.
+    _, _, test_from_texts, test_to_texts = get_correspondences("nl", "en", training_split=0.995,
                                                                sampling_ratio=DEFAULT_SAMPLING_RATIO)
     genopts = {"num_beams": 2, "max_length": 32}
     model = get_trained_pipeline("nl", "en", "base_attn")
     results["nl_to_en"] = evaluate_pipeline(model, test_from_texts, test_to_texts, **genopts)
-    _, _, test_from_texts, test_to_texts = get_correspondences("en", "nl", training_split=0.98,
+    save_results("experiment_both_directions", results)
+    _, _, test_from_texts, test_to_texts = get_correspondences("en", "nl", training_split=0.995,
                                                                sampling_ratio=DEFAULT_SAMPLING_RATIO)
     genopts = {"num_beams": 2, "max_length": 32}
     model = get_trained_pipeline("en", "nl", "base_attn")
@@ -258,3 +264,14 @@ def experiment_pivot():
 def experiment_plot_attention():
     pass
 
+# This is how to load a fresh, untrained model:
+model = t.translation_pipeline("nl", "en",  **t.PIPELINE_PRESETS["base_attn"])
+
+print(model.core.summary(expand_nested=True))
+
+# Models can be called directly to receive token-logits via:
+
+# model.core([tf.convert_to_tensor([model.from_tokenizer("Hello Bello")]), tf.convert_to_tensor([model.to_tokenizer("a b c d e")])])
+# model([tf.convert_to_tensor(["Hello Bello"]), tf.convert_to_tensor(["a b c d e"])])
+
+# One can execute each experiment by executing the respective function.
