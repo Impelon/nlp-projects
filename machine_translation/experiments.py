@@ -270,6 +270,9 @@ def plot_attention(model, input):
     _, attention_weights = model(inputs, return_attention=True)
     tokenized_example = model.from_tokenizer.id_to_token(model.from_tokenizer(input))
     tokenized_translation = model.to_tokenizer.id_to_token(model.to_tokenizer(translation))[1:]
+    # Remove SentencePiece's special whitespace replacement for visualization.
+    tokenized_example = list(map(lambda x: x.replace("▁", " "), tokenized_example))
+    tokenized_translation = list(map(lambda x: x.replace("▁", " "), tokenized_translation))
     attention_weights = attention_weights.numpy()[0]
     sns.heatmap(attention_weights, vmin=0, xticklabels=tokenized_example, yticklabels=tokenized_translation)
     plt.xlabel("input text")
@@ -283,7 +286,7 @@ def experiment_plot_attention():
         "Bucharest is the capital and largest city of Romania, as well as its cultural, industrial, and financial centre.",
         "Located on the Bega River, Timișoara is considered the informal capital city of the historical Banat, which is nowadays broadly considered a subregion of Transylvania.",
         "Broader definitions of Transylvania also occasionally encompass Banat.",
-        "The Government meetings are convened and are led by the prime minister.",
+        "The Government meetings are led by the prime minister.",
         "In modern times, the vampire is generally held to be a fictitious entity.",
     ]
     model = get_trained_pipeline("en", "nl", "base_attn")
@@ -299,7 +302,7 @@ def experiment_plot_attention():
     # Eitherway, we have developed a translation model for Dutch-Swedish using English as a pivot langauge.
     example = "Boekarest is de hoofdstad en het industriële en commerciële centrum van Roemenië."
     pivot_translation, _ = plot_attention(model_to_pivot, example)
-    plt.savefig(RESULTS_PATH / f"attention_weights_{hash((example, translation)) % 0xFFFFFF}.pdf", bbox_inches="tight", pad_inches=0)
+    plt.savefig(RESULTS_PATH / f"attention_weights_{hash((example, pivot_translation)) % 0xFFFFFF}.pdf", bbox_inches="tight", pad_inches=0)
     plt.clf()
     translation, _ = plot_attention(model_from_pivot, pivot_translation)
     plt.savefig(RESULTS_PATH / f"attention_weights_{hash((pivot_translation, translation)) % 0xFFFFFF}.pdf", bbox_inches="tight", pad_inches=0)
