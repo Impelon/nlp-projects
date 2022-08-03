@@ -365,7 +365,7 @@ class TranslationPipeline(keras.Model):
             logits = logits.to_tensor()
         return logits
 
-    def call(self, inputs, shift_decoder_inputs=True, *args, **kwargs):
+    def call(self, inputs, shift_decoder_inputs=True, return_attention=False, *args, **kwargs):
         from_text, to_text = inputs
         from_tokens = self.from_tokenizer(from_text)
         to_tokens = self.to_tokenizer(to_text)
@@ -373,7 +373,10 @@ class TranslationPipeline(keras.Model):
         if shift_decoder_inputs:
             to_tokens = to_tokens[:, :-1]
 
-        return self.get_logits(self.core([from_tokens, to_tokens], *args, **kwargs))
+        decoder_output = self.core([from_tokens, to_tokens], *args, **kwargs)
+        if return_attention:
+            return decoder_output
+        return self.get_logits(decoder_output)
 
 
 def build_model(from_vocab_size, to_vocab_size, intermediate_state_size, encoder_options=None, decoder_options=None):

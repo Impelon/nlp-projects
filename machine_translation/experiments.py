@@ -15,6 +15,7 @@ from nltk.stem import SnowballStemmer
 
 import matplotlib
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 import tensorflow as tf
 import keras.utils
@@ -261,8 +262,49 @@ def experiment_pivot():
     pass
 
 
+def plot_attention(model, input):
+    # Get translation...
+    translation = model.translate(input)
+    # ... and manually call the model with the translation and the original input to get the attention-weights used.
+    inputs = [tf.convert_to_tensor([input]), tf.convert_to_tensor([translation])]
+    _, attention_weights = model(inputs, return_attention=True)
+    tokenized_example = model.from_tokenizer.id_to_token(model.from_tokenizer(input))
+    tokenized_translation = model.to_tokenizer.id_to_token(model.to_tokenizer(translation))[1:]
+    attention_weights = attention_weights.numpy()[0]
+    sns.heatmap(attention_weights, vmin=0, xticklabels=tokenized_example, yticklabels=tokenized_translation)
+    plt.xlabel("input text")
+    plt.ylabel("generated translation")
+    return translation, attention_weights
+
+
 def experiment_plot_attention():
-    pass
+    examples = [
+        "Romania's economy has been growing in recent years, however corruption is still a major problem.",
+        "Bucharest is the capital and largest city of Romania, as well as its cultural, industrial, and financial centre.",
+        "Located on the Bega River, Timișoara is considered the informal capital city of the historical Banat, which is nowadays broadly considered a subregion of Transylvania.",
+        "Broader definitions of Transylvania also occasionally encompass Banat.",
+        "The Government meetings are convened and are led by the prime minister.",
+        "In modern times, the vampire is generally held to be a fictitious entity.",
+    ]
+    model = get_trained_pipeline("en", "nl", "base_attn")
+    for example in examples:
+        translation, _ = plot_attention(model, example)
+        plt.savefig(RESULTS_PATH / f"attention_weights_{hash((example, translation)) % 0xFFFFFF}.pdf", bbox_inches="tight", pad_inches=0)
+        plt.clf()
+    model_to_pivot = get_trained_pipeline("nl", "en", "base_attn")
+    model_from_pivot = get_trained_pipeline("en", "sv", "base_attn")
+    # We could create a joint pivot-model here using:
+    # model = PivotTranslationPipeline(model_to_pivot, model_from_pivot)
+    # But this would make it harder to extract the attentions.
+    # Eitherway, we have developed a translation model for Dutch-Swedish using English as a pivot langauge.
+    example = "Boekarest is de hoofdstad en het industriële en commerciële centrum van Roemenië."
+    pivot_translation, _ = plot_attention(model_to_pivot, example)
+    plt.savefig(RESULTS_PATH / f"attention_weights_{hash((example, translation)) % 0xFFFFFF}.pdf", bbox_inches="tight", pad_inches=0)
+    plt.clf()
+    translation, _ = plot_attention(model_from_pivot, pivot_translation)
+    plt.savefig(RESULTS_PATH / f"attention_weights_{hash((pivot_translation, translation)) % 0xFFFFFF}.pdf", bbox_inches="tight", pad_inches=0)
+    plt.clf()
+
 
 # This is how to load a fresh, untrained model:
 model = t.translation_pipeline("nl", "en",  **t.PIPELINE_PRESETS["base_attn"])
