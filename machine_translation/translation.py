@@ -89,6 +89,21 @@ PIPELINE_PRESETS = {
             "use_attention": True,
         },
     },
+    "large_attn": {
+        "tokenizer_init": TOKENIZER_INITS["subword"],
+        "intermediate_state_size": 512,
+        "encoder_options": {
+            "embeddings_size": 256,
+            "embeddings_type": "word2vec_cbow",
+            "embeddings_trainable": False,
+        },
+        "decoder_options": {
+            "embeddings_size": 256,
+            "embeddings_type": "word2vec_cbow",
+            "embeddings_trainable": False,
+            "use_attention": True,
+        },
+    },
     "byte_tiny": {
         "tokenizer_init": TOKENIZER_INITS["character"],
         "intermediate_state_size": 32,
