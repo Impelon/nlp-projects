@@ -81,8 +81,8 @@ def iterate_dataset(language, data_path=None):
         data_path = DATA_PATH
 
     lang = language.lower()
-    lang_paths = list(data_path.rglob(f"europarl-v7.{lang}-en.{lang}"))
-    en_paths = list(data_path.rglob(f"europarl-v7.{lang}-en.en"))
+    lang_paths = list(data_path.rglob(f"*.{lang}-en.{lang}"))
+    en_paths = list(data_path.rglob(f"*.{lang}-en.en"))
     for paths in (lang_paths, en_paths):
         if not paths:
             raise LookupError(f"No dataset for this language was found at: {data_path}")

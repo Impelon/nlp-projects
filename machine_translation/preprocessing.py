@@ -32,6 +32,7 @@ CHARACTERS_TO_REPLACE = {
     "“": "\"",
     "ʺ": "\"",
     "″": "\"",
+    "‒": "-",
     "―": "-",
     "–": "-",
     "—": "-",
@@ -44,14 +45,19 @@ CHARACTERS_TO_REPLACE = {
     "º": "°",
     "˚": "°",
     "·": ";",
+    "¨": "",
+    "¬": "",
     "\u200b": "",
+    "\u200c": "",
     "\u202a": "",
     "\u202b": "",
     "\u202c": "",
     "\u202d": "",
     "\u202e": "",
 }
+FULLWIDTH2ASCII_TABLE = str.maketrans({i + 0xFEE0: chr(i) + " " for i in range(0x20, 0x7F)})
 REPLACEMENT_TABLE = str.maketrans(CHARACTERS_TO_REPLACE)
+REPLACEMENT_TABLE.update(FULLWIDTH2ASCII_TABLE)
 
 # Approximate phonetic transliteration tables by modern pronunciation.
 # We do not actually use these, as visual confusion is the main concern.

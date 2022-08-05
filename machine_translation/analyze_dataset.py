@@ -15,7 +15,7 @@ sns.set_theme(context="paper", style="white", font_scale=1.5, font="serif")
 
 CONTEMPORARY_YEAR_PATTERN = re.compile(r"\b[1-2]\d{3}\b")
 
-LANGUAGES = ["NL", "SV", "DA", "DE", "RO"]
+LANGUAGES = ["NL", "SV", "DA", "DE", "RO", "NB"]
 
 IMAGES_PATH = Path(__file__).parent / "images"
 
