@@ -40,13 +40,16 @@ nltk.download("wordnet", download_dir=NLTK_DOWNLOAD_PATH)
 nltk.download("omw-1.4", download_dir=NLTK_DOWNLOAD_PATH)
 word_tokenize = nltk.tokenize.word_tokenize
 
-STEMMER_FOR_LANGUAGE = {
-    "en": SnowballStemmer("english"),
-    "nl": SnowballStemmer("dutch"),
-    "sv": SnowballStemmer("swedish"),
-    "ro": SnowballStemmer("romanian"),
-    "de": SnowballStemmer("german"),
-    "da": SnowballStemmer("danish"),
+LANGUAGE_CODE_TO_NLTK_LANGUAGE = {
+    "en": "english",
+    "nl": "dutch",
+    "sv": "swedish",
+    "ro": "romanian",
+    "de": "german",
+    "da": "danish",
+    "no": "norvegian",
+    "nb": "norvegian",
+    "nn": "norvegian",
 }
 
 
@@ -109,7 +112,7 @@ def evaluate_pipeline(model, texts_to_translate, target_translations, **generati
     return results
 
 
-def evaluate_translations(references, hypotheses, language="en", include_samples=10):
+def evaluate_translations(references, hypotheses, language_code="en", include_samples=10):
     # Convert tensors of byte-sequences to text if needed.
     if isinstance(references, tf.Tensor):
         references = map(bytes.decode, references.numpy())
@@ -118,10 +121,11 @@ def evaluate_translations(references, hypotheses, language="en", include_samples
 
     results = {}
     smoothing = SmoothingFunction().method2  # ORANGE smoothing
-    stemmer = STEMMER_FOR_LANGUAGE[language]
+    language = LANGUAGE_CODE_TO_NLTK_LANGUAGE[language_code]
+    stemmer = SnowballStemmer(langauge)
 
-    references = [word_tokenize(reference) for reference in references]
-    hypotheses = [word_tokenize(hypothesis) for hypothesis in hypotheses]
+    references = [word_tokenize(reference, langauge=langauge) for reference in references]
+    hypotheses = [word_tokenize(hypothesis, langauge=langauge) for hypothesis in hypotheses]
 
     if include_samples > 0:
         sample_indices = random.sample(range(len(references)), include_samples)
